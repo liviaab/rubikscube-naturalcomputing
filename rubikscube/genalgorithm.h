@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -14,11 +16,9 @@ int	getOptFitness(void);
 int	getWorstFitness(void);
 int getFitness(Cube *);
 void getFitnessPop(Individual *, Cube *);
-void printpopfitness(Individual *, int );
 void selectElite(Individual *, Individual *);
-void crossover(Individual *);
-void mutation(Individual *);
+void crossover(Individual *, Individual *, int*);
+void mutation(Individual *,  Individual *, int*);
 void initPopulation( Individual *);
-void selectElite(Individual *, Individual *);
+void nextGeneration(Individual*, Individual*);
 void init(Cube *, FILE *);
-void printStatsToFile(Individual *, FILE*);

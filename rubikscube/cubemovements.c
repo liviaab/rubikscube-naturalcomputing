@@ -8,10 +8,10 @@
 
 void genMoves(int *moves){
 	int i;
-
+	
 	for(i = 0; i < NUM_MOVEMENTS ; i++){
 		moves[i] = (rand() % 18) + 1;
-		
+
 	}
 	return;
 }
@@ -507,7 +507,7 @@ void executeMove(Cube *cube, int move){
 			executeMove(cube, 6);		
 			break;
 		default:
-			printf("Movimento inválido.\nInvalid move\n");
+			printf("Movimento inválido.Invalid move\n");
 			break;
 	}
 }

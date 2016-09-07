@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <time.h>
 #include "cube.h"
 #include "cubemovements.h"
 #include "genalgorithm.h"
+#include "auxfunctions.h"
+#include "globals.h"
 
 
-int	getOptFitness(void){
+int	getOptFitness(void){ 
 	return 0; 
-
 };
 
 int getWorstFitness(void){
@@ -83,9 +85,7 @@ void initPopulation(Individual *pop){
 	int i, k ;
 	for(i = 0; i < POPULATION ; i++){
 		genMoves(pop[i].Genotype);
-		
 	}
-
 	return;
 }
 
@@ -101,78 +101,177 @@ void getFitnessPop(Individual *population, Cube *cube){
 	return;
 }
 
-void printpopfitness(Individual *population, int length){
-	int i;
-	printf("Imprimindo a Fitness de todos os individuos\n");
-	for (i = 0; i < length; i++){
-		printf("%d\n", population[i].Fitness);
-	}
-	return;
-}
-
 int cmpfunc (const void * a, const void * b){
    return ( (*(Individual*)a).Fitness - (*(Individual*)b).Fitness );
 }
 
-void selectElite(Individual *population, Individual *elite){
+void selectElite(Individual *population, Individual *children){
 	//ordenar pela melhor fitness
 	qsort(population, POPULATION, sizeof(Individual), cmpfunc);
 
 	int i;
-	for (i = 0; i < ELITE; i++){
-		elite[i] = population[i];
+	for (i = 0; i < NUM_ELITE; i++){
+		children[i] = population[i];
 	}
 	return;
 }
 
-void crossover(Individual *population){
+void tournament(Individual *contestants, int length, Individual *winner ){
+	int i;	
+	Individual aux[NUM_TORNEIO];
+
+	for(i = 0 ; i < NUM_TORNEIO ; i++){
+		int a = ( rand()%length );
+		//printf("a do torneio: %d\n", a);
+		aux[i] = contestants[ a ];
+	}
 	
-
+	qsort(aux, NUM_TORNEIO, sizeof(Individual), cmpfunc);
+	*(winner) = aux[0];
 	return;
 }
 
-void mutation(Individual *population){
+void crossover(Individual *population, Individual *children, int *nextIndex){
 
+	int i, j, k;		
+	int limit = (int)POPULATION*TAXA_CRUZAMENTO / 2;
+	Individual father1, father2;
+	
+	j = *nextIndex;
+	for( i = 0; i < limit ; i++){
+		//selecionar os individuos por torneio
+		tournament(population, POPULATION, &father1);
+		tournament(population, POPULATION, &father2); 
+
+		for(k = 0; k < NUM_MOVEMENTS ; k++){
+			if( k < CROSSOVER_POINT){
+				children[j].Genotype[k] =  father1.Genotype[k];	
+				children[j+1].Genotype[k] =  father2.Genotype[k];	
+			}else{
+				children[j].Genotype[k] =  father2.Genotype[k];	
+				children[j+1].Genotype[k] =  father1.Genotype[k];
+			}
+		}
+		j += 2;
+	}
+	*nextIndex = j;
 	return;
 }
 
-void printStatsToFile(Individual *population, FILE *fpout){
-	/*
-		1 - fitness do melhor e do pior dos individuos
-		2 - fitness media da população
-		3 - numero de individuos repetidos na população
-		4 - numero de individuos gerados por crossover melhores e piores que a fitness media dos pais
-	*/
+void mutation(Individual *population, Individual *children, int *nextIndex){
+	int i, j, k, limit;
+	Individual aux;
+
+	limit = (int)POPULATION*TAXA_MUTACAO;
+	j=*nextIndex;
+
+	for(i = 0; i < limit ; i++){ 
+		if( j < POPULATION){
+			tournament(population, POPULATION, &aux);
+
+			for(k = 0; k < NUM_MOVEMENTS; k++){
+				children[j].Genotype[k]	= aux.Genotype[k];	
+			}
+
+			// mutacao
+			for(k = 0; k< NUM_MUTATIONS; k++){
+				int a = (rand()%NUM_MOVEMENTS);
+				int b = rand()% 18  + 1 ;
+				//printf("Indice %d  mutado para %d\n", a, b);
+				children[j].Genotype[ a ] = b;
+			}			
+		}
+		else{
+			for(k = 0; k< NUM_MUTATIONS; k++){
+				int a = (rand()%NUM_MOVEMENTS);
+				int b = rand()% 18  + 1 ;
+				int c = (rand()%POPULATION);
+				//printf("Indice %d  mutado para %d\n", a, b);
+				if( c == 0 ) c++;
+				children[c].Genotype[ a ] = b;
+			}	
+		}
+
+		j++;
+	}
+	*nextIndex = i;
+	return;
 }
+
+// true -> iguais 
+bool cmpIndv(int* indv1, int* indv2){
+	int i, j;
+
+	for (i = 0; i < NUM_MOVEMENTS; i++){
+		if(indv1[i] != indv2[i]){
+			return false;
+		}
+	}
+	return true;	
+}
+
+void nextGeneration(Individual *population, Individual *children){
+	int i;
+	for(i = 0; i < POPULATION; i++){
+		population[i] = children[i];
+	}
+	return;
+}
+
 
 void init(Cube *cube, FILE *fpout){
 
 	Individual population[POPULATION];
-	Individual elite[ELITE];
-
+	Individual children[POPULATION];
+	Individual aux;
+	
 	initPopulation( population );	
 	getFitnessPop( population, cube );
+	//printf("População inicial:\n");
+	//printArray(population, POPULATION);
 	
-	int i, k;
+	int i, k, j, nextIndex;
 	bool stop;
-	stop = false;
+	stop = false; 
+	
+	srand ( (unsigned)time(NULL) );
 	for(i = 0; i < NUM_GENERATIONS; i++){
-		selectElite(population, elite);
-		crossover(population);
-		mutation(population);
-		getFitnessPop(population, cube);
-
 		//criterio de parada: se tiver algum cubo solucionado
 		for(k = 0; k < POPULATION; k++){
 			if(population[k].Fitness == getOptFitness()){
 				stop = true;
-				break;
+				printf("CUBO RESOLVIDO!\n");
+				break; 
 			}
 		}
 
+		selectElite(population, children);	
+		//aqui, o vetor population está ordenado com base na fitness	
+		nextIndex = NUM_ELITE;
+		crossover(population, children, &nextIndex);
+		//printf("Elite + Crossover:\n");	
+		//printArray(children, nextIndex);
+		mutation(population, children, &nextIndex);
+		//printf("Elite + Crossover + Mutacao + possiveis adicoes complementares:\n");	
+		
+		while(nextIndex < POPULATION){
+			tournament(population, POPULATION, &aux);
+			for(j=0; j<NUM_MOVEMENTS; j++){
+				children[nextIndex].Genotype[j] = aux.Genotype[j];
+			}
+			nextIndex++;
+		}
+
+		getFitnessPop(children, cube);
+		nextGeneration(population, children);
+		//printf("\nGeracao %d\n",i );
+		//printArray(children, POPULATION);
 		printStatsToFile(population, fpout);
+		//printf("\n");
 		if(stop) break;
 	}
+	//printf("Last generation:\n");
+	//printArray(children, POPULATION);
 	
 	return;
 }

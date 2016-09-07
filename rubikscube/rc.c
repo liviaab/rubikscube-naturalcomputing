@@ -5,7 +5,9 @@
 #include "cube.h"
 #include "cubemovements.h"
 #include "globals.h"
-#include <limits.h>
+
+
+
 
 int main(int argc, char *argv[]){
 	FILE *fpin, *fpout;
@@ -20,9 +22,8 @@ int main(int argc, char *argv[]){
 	Cube cube;
 	read_entry( fpin, &cube);
 	
-	init(&cube);
-	printf("k tnx bye2\n");
-
+	init(&cube, fpout);
+	
 	fclose(fpin);
 	fclose(fpout);
     return 0;
