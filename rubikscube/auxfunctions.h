@@ -10,7 +10,7 @@
 
 
 void printpopfitness(Individual *, int );
-void printStatsToFile(Individual *, FILE*);
+void printStatsToFile(Individual *, Individual *, FILE*);
 
 void swap(Individual*, Individual*);
 void printArray(Individual*, int);

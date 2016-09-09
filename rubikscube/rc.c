@@ -12,10 +12,10 @@
 int main(int argc, char *argv[]){
 	FILE *fpin, *fpout;
 	fpin = fopen(argv[1], "r");
-	fpout = fopen(OUTPUTFILE, "w");
+	fpout = fopen(argv[2], "w");
 
 	if(!fpin){
-		printf("Erro na abertura do arquivo\nError opening file\n");
+		printf("Erro na abertura do arquivo\nError opening file\n\n");
 		exit(0);
 	}
 

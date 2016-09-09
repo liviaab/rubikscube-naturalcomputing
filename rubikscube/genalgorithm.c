@@ -236,14 +236,11 @@ void init(Cube *cube, FILE *fpout){
 	
 	srand ( (unsigned)time(NULL) );
 	for(i = 0; i < NUM_GENERATIONS; i++){
-		//criterio de parada: se tiver algum cubo solucionado
-		for(k = 0; k < POPULATION; k++){
-			if(population[k].Fitness == getOptFitness()){
-				stop = true;
-				printf("CUBO RESOLVIDO!\n");
-				break; 
-			}
-		}
+		for(k = 0; k < POPULATION; k++ ){
+			if(population[k].Fitness == getOptFitness() ){
+				printf("Cubo resolvido na %d geracao", (i+1));
+			}	
+		}		
 
 		selectElite(population, children);	
 		//aqui, o vetor population está ordenado com base na fitness	
@@ -263,12 +260,13 @@ void init(Cube *cube, FILE *fpout){
 		}
 
 		getFitnessPop(children, cube);
+		printStatsToFile(children, population, fpout);
 		nextGeneration(population, children);
 		//printf("\nGeracao %d\n",i );
 		//printArray(children, POPULATION);
-		printStatsToFile(population, fpout);
+
 		//printf("\n");
-		if(stop) break;
+
 	}
 	//printf("Last generation:\n");
 	//printArray(children, POPULATION);

@@ -18,20 +18,18 @@ void printpopfitness(Individual *population, int length){
 }
 
 
-void printStatsToFile(Individual *population, FILE *fpout){
-	/*
-		1 - fitness do melhor e do pior dos individuos
-		2 - fitness media da população
-		3 - numero de individuos repetidos na população
-		?? 4 - numero de individuos gerados por crossover melhores e piores que a fitness media dos pais
-	*/
+void printStatsToFile(Individual *population, Individual *parents, FILE *fpout){
+
 	int i,k;
 	int aux1, aux2, aux3, aux4;
+	float aux5;
 
-	aux1 = population[0].Fitness;
-	aux2 = population[0].Fitness;
-	aux4 = 0;
-	aux3 = 0;
+	aux1 = population[0].Fitness; // fitness do melhor individuo
+	aux2 = population[0].Fitness; //fitness do pior individuo
+	aux4 = 0;							// fitness media
+	aux3 = 0;							//numero de individuos repetidos na população
+	aux5 = 0;							//media dos pais | melhora da fitness media (em %)
+
 	for(i = 0; i < POPULATION; i++){
 		//best fitness
 		if(population[i].Fitness < aux1){
@@ -64,7 +62,16 @@ void printStatsToFile(Individual *population, FILE *fpout){
 		}
 	}
 	fprintf(fpout, "%d\n\n",aux3);
+	/*
+	for(i =0 ; i < POPULATION; i++){
+		aux5 += parents[i].Fitness;
+	}
 
+	aux5 = aux5/POPULATION;
+	fprintf(fpout, "%d | ", (int) aux5);
+	aux5 = (float) ((aux4 - aux5)/getWorstFitness()) * 100 ;
+	fprintf(fpout, "%.f\n\n", aux5);
+	*/
 	return;
 }
 
